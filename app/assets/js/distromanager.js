@@ -14,4 +14,15 @@ const api = new DistributionAPI(
     false
 )
 
+// プレイ押下時(dlAsync -> refreshDistributionOrFallback -> pullRemote)に
+// 常に「pushされた最新」を取得するため、配信インデックスの取得URLに毎回ユニークな
+// クエリを付けて GitHub Pages の CDN キャッシュをバイパスする。
+// （MOD実体のURLは固定なので影響なし。distribution.json だけ確実に最新化される）
+const _pullRemote = api.pullRemote.bind(api)
+api.pullRemote = function () {
+    const sep = exports.REMOTE_DISTRO_URL.includes('?') ? '&' : '?'
+    this.remoteUrl = exports.REMOTE_DISTRO_URL + sep + '_=' + Date.now()
+    return _pullRemote()
+}
+
 exports.DistroAPI = api
