@@ -62,6 +62,19 @@ if(!isDev){
                     }
                 })
                 showUpdateUI(info)
+                // ランディングの目立つ「更新して再起動」ボタンを点灯（ワンクリックで即適用）
+                {
+                    const _ub = document.getElementById('landingUpdateNow')
+                    if(_ub){
+                        _ub.style.display = ''
+                        _ub.textContent = `🔄 v${info.version} に更新して再起動`
+                        _ub.onclick = () => { if(!isDev){ ipcRenderer.send('autoUpdateAction', 'installUpdateNow') } }
+                    }
+                }
+                break
+            case 'download-progress':
+                loggerAutoUpdater.info(`Downloading update.. ${Math.round(info.percent)}%`)
+                settingsUpdateButtonStatus(`ダウンロード中.. ${Math.round(info.percent)}%`, true)
                 break
             case 'update-not-available':
                 loggerAutoUpdater.info('No new update found.')

@@ -46,6 +46,13 @@ linux:
   category: 'Game'
 
 
+# 自動アップデート配信先（electron-updater が app-update.yml に焼き込む）
+publish:
+  - provider: github
+    owner: MitSuKiKuStiM
+    repo: HachiCrauncher
+    releaseType: release
+
 directories:
   buildResources: 'build'
   output: 'dist'
