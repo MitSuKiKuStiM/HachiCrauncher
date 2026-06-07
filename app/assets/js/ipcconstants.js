@@ -1,6 +1,9 @@
 // NOTE FOR THIRD-PARTY
 // REPLACE THIS CLIENT ID WITH YOUR APPLICATION ID.
 // SEE https://github.com/dscalzi/HeliosLauncher/blob/master/docs/MicrosoftAuth.md
+// TODO(HachiCrauncher): 下は Helios 公式の暫定 client ID（ローカルテスト用）。
+//   自分の Azure アプリ（redirect_uri = https://login.microsoftonline.com/common/oauth2/nativeclient）を
+//   登録したら、その Application (client) ID に差し替える。差し替えるまでログイン画面には "Helios" 名が出る。
 exports.AZURE_CLIENT_ID = '1ce6e35a-126f-48fd-97fb-54d143ac6d45'
 // SEE NOTE ABOVE.
 
