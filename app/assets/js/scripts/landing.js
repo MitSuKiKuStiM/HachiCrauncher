@@ -42,6 +42,9 @@ const user_text               = document.getElementById('user_text')
 
 const loggerLanding = LoggerUtil.getLogger('Landing')
 
+// ランチャーのバージョンをランディング画面（右下）に表示
+try { document.getElementById('launcherVersionLabel').textContent = 'v' + require('@electron/remote').app.getVersion() } catch(e) { /* ignore */ }
+
 /* Launch Progress Wrapper Functions */
 
 /**
