@@ -40,12 +40,66 @@ class ProcessBuilder {
         this.usingFabricLoader = false
         this.llPath = null
     }
-    
+
+    /**
+     * Apply shared resource-pack selection + keybindings from the distributed
+     * `hachicrauncher-shared-options.txt` into the player's options.txt.
+     *
+     * "Baseline" behavior: the shared keys are (re)applied only when that file
+     * changes (first launch, or the host pushed an update). All other personal
+     * settings (FOV, mouse sensitivity, volume, etc.) are preserved untouched.
+     */
+    syncSharedOptions(){
+        try {
+            const sharedFile = path.join(this.gameDir, 'hachicrauncher-shared-options.txt')
+            if(!fs.existsSync(sharedFile)) return
+            const sharedRaw = fs.readFileSync(sharedFile, 'utf8')
+            const sharedHash = crypto.createHash('md5').update(sharedRaw).digest('hex')
+            const markerFile = path.join(this.gameDir, '.hachicrauncher-options.json')
+            let marker = {}
+            try { marker = JSON.parse(fs.readFileSync(markerFile, 'utf8')) } catch(e) { /* first run */ }
+            if(marker.sharedHash === sharedHash) return // unchanged -> respect player's settings
+
+            const shared = new Map()
+            for(const line of sharedRaw.split(/\r?\n/)){
+                const t = line.trim()
+                if(!t || t.startsWith('#')) continue
+                const i = t.indexOf(':')
+                if(i < 0) continue
+                shared.set(t.slice(0, i), t)
+            }
+            if(shared.size === 0) return
+
+            const optionsFile = path.join(this.gameDir, 'options.txt')
+            const applied = new Set()
+            let outLines = []
+            if(fs.existsSync(optionsFile)){
+                outLines = fs.readFileSync(optionsFile, 'utf8').split(/\r?\n/).map(line => {
+                    const i = line.indexOf(':')
+                    if(i < 0) return line
+                    const key = line.slice(0, i)
+                    if(shared.has(key)){ applied.add(key); return shared.get(key) }
+                    return line
+                })
+                while(outLines.length && outLines[outLines.length - 1].trim() === '') outLines.pop()
+            }
+            for(const [key, full] of shared){
+                if(!applied.has(key)) outLines.push(full)
+            }
+            fs.writeFileSync(optionsFile, outLines.join('\n') + '\n', 'utf8')
+            fs.writeFileSync(markerFile, JSON.stringify({ sharedHash, appliedAt: new Date().toISOString() }), 'utf8')
+            logger.info(`Applied shared options (${shared.size} keys) to options.txt`)
+        } catch(err) {
+            logger.warn('Failed to apply shared options:', err)
+        }
+    }
+
     /**
      * Convienence method to run the functions typically used to build a process.
      */
     build(){
         fs.ensureDirSync(this.gameDir)
+        this.syncSharedOptions()
         const tempNativePath = path.join(os.tmpdir(), ConfigManager.getTempNativeFolder(), crypto.pseudoRandomBytes(16).toString('hex'))
         process.throwDeprecation = true
         this.setupLiteLoader()
